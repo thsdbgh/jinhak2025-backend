@@ -49,6 +49,26 @@ def health_db():
     except Exception as e:
         return {"db": "error", "detail": str(e)}, 500
 
+@app.post("/checkin")
+def check_in():
+    """현장 체크인"""
+    if supabase:
+        data = request.json
+        student_id = data.get("student_id")  # 학번 기반 확인
+
+        res = supabase.table("attendees") \
+            .update({"checked_in": True}) \
+            .eq("student_id", student_id) \
+            .execute()
+
+        if res.data:
+            return jsonify({"status": "ok", "message": "체크인 완료"})
+        else:
+            return jsonify({"status": "error", "message": "해당 학생 없음"}), 404
+    else:
+        return jsonify({"status": "error", "message": "DB 연결 안됨"}), 500
+
+
 @app.get("/notices")
 def get_notices():
     """공지사항 목록 (핀 고정 우선, 최신순) — anon SELECT 허용 필요"""
